@@ -4,7 +4,7 @@ import java.lang.annotation.*;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ApiAnnotation {
+public @interface ApiPermission {
     /** 模块 */
     String name() default "";
 }

@@ -3,6 +3,7 @@ package com.zmy.sys_lucky.service;
 import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.IdWorker;
+import com.zmy.sys_common.utils.encdec.PasswordUtils;
 import com.zmy.sys_lucky.dao.UserRoleRelationDao;
 import com.zmy.sys_moudle.lucky.entity.Role;
 import com.zmy.sys_moudle.lucky.entity.User;
@@ -14,6 +15,7 @@ import com.zmy.sys_moudle.lucky.vo.resp.UserVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -40,9 +42,13 @@ public class UserService {
     public User save(User user) throws CommonExp {
         User dbUser = userDao.findUserByUsernameEquals(user.getUsername());
         if (dbUser == null) {
+            String salt = PasswordUtils.getSalt();
+            String password = PasswordUtils.encode(user.getPassword(),salt);
             //设置主键的值
             String id = IdWorker.getInstance().nextId();
             user.setId(id);
+            user.setPassword(password);
+            user.setSalt(salt);
             user.setState("1");
             user.setUpdateTime(new Date());
             user.setCreateTime(new Date());

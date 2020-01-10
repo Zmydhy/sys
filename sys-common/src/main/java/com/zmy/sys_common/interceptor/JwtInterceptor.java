@@ -2,7 +2,7 @@ package com.zmy.sys_common.interceptor;
 
 
 import com.zmy.jar_test.log.Log;
-import com.zmy.sys_common.ApiAnnotation;
+import com.zmy.sys_common.ApiPermission;
 import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.JwtUtils;
@@ -64,7 +64,7 @@ public class JwtInterceptor extends HandlerInterceptorAdapter {
                 //通过handler
                 HandlerMethod h = (HandlerMethod) handler;
                 //获取接口上的reqeustmapping
-                ApiAnnotation annotation = h.getMethodAnnotation(ApiAnnotation.class);
+                ApiPermission annotation = h.getMethodAnnotation(ApiPermission.class);
                 if (annotation == null) {
                     //说明不需要权限，直接放行
                     request.setAttribute("user_claims", claims);

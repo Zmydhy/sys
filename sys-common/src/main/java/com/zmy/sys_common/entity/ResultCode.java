@@ -21,6 +21,7 @@ public enum ResultCode {
 
     //---用户操作返回码  2xxxx----
     USERNAMEORPASSWORDERROR(false, 20001, "用户名或密码错误"),
+    USERLOCKED(false, 20002, "用户被锁定，请联系管理员"),
 
     USERNOEXIST(false, 20002, "该用户不存在 "),
     USERALEADYEXIST(false, 20003, "该用户已存在 "),

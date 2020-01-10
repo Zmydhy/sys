@@ -6,6 +6,7 @@ import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.JwtUtils;
 import com.zmy.sys_common.utils.PermissionConstants;
+import com.zmy.sys_common.utils.encdec.PasswordUtils;
 import com.zmy.sys_lucky.service.RoleService;
 import com.zmy.sys_lucky.service.UserService;
 import com.zmy.sys_moudle.lucky.entity.Permission;
@@ -19,10 +20,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.zmy.sys_common.ApiAnnotation;
+import com.zmy.sys_common.ApiPermission;
 
 /**
  * Created with IntelliJ IDEA.
@@ -44,13 +46,13 @@ public class UserController extends BaseController {
     RedisTemplate<String, Object> redisTemplate;
 
     @PostMapping
-    @ApiAnnotation(name = "api:adduser")
-    public Result addUser(@RequestBody User user) throws CommonExp {
+    @ApiPermission(name = "api:adduser")
+    public Result addUser(@RequestBody @Valid User user) throws CommonExp {
         return Result.success(getUserVo(userService.save(user)));
     }
 
     @GetMapping
-    @ApiAnnotation(name = "api:queryuser")
+    @ApiPermission(name = "api:queryuser")
     public Result queryUser(@RequestParam String userId) throws CommonExp {
         return Result.success(userService.findUserVoById(userId));
     }
@@ -100,9 +102,13 @@ public class UserController extends BaseController {
         String password = loginMap.get("password");
         User user = userService.findByUserName(username);
         //登录失败
-        if (user == null || !user.getPassword().equals(password)) {
+        if (user == null){
+            return Result.error(ResultCode.USERNOEXIST);
+        }else if(!PasswordUtils.matches(user.getSalt(),password,user.getPassword())){
             return Result.error(ResultCode.USERNAMEORPASSWORDERROR);
-        } else {
+        } else if(user.getState().equals("0")){
+            return Result.error(ResultCode.USERLOCKED);
+        }else {
             //登录成功
             //api权限字符串
             StringBuilder sb = new StringBuilder();

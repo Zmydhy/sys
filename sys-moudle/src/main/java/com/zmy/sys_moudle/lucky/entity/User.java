@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
 import java.util.Date;
 
 /**
@@ -25,12 +26,17 @@ public class User  {
 
 
     private String mobile;
+
+    @NotBlank(message = "账号不能为空")
     private String username;
     /**
      * 昵称
      */
     private String nickname;
+    @NotBlank(message = "密码不能为空")
     private String password;
+
+    private String salt;
     /**
      * 启用状态 0为禁用 1为启用
      */
