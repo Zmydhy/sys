@@ -24,8 +24,8 @@ logs:
 sys:
   jwt:
     key: lucky
-    ttl: 600000
+    ttl: 1800000
   redis:
-    exp: 900
+    exp: 2000
 
 

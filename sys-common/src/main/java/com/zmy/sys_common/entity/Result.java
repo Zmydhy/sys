@@ -37,6 +37,14 @@ public class Result {
         result.setDate(new Date());
         return result;
     }
+    public static Result error(String message) {
+        Result result = new Result();
+        result.setSuccess(ResultCode.FAIL.isSuccess());
+        result.setCode(ResultCode.FAIL.getCode());
+        result.setMessage(message);
+        result.setDate(new Date());
+        return result;
+    }
     public static Result error(ResultCode resultEnum) {
         Result result = new Result();
         result.setSuccess(resultEnum.isSuccess());
@@ -46,9 +54,7 @@ public class Result {
         return result;
     }
 
-    public static Result error(ResultCode resultEnum, String message) {
-        return error(resultEnum,message);
-    }
+
     public static Result error(ResultCode resultEnum, Object data) {
         Result result = new Result();
         result.setSuccess(resultEnum.isSuccess());

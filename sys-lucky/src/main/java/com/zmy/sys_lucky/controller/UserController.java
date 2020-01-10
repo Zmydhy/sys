@@ -16,7 +16,9 @@ import com.zmy.sys_moudle.lucky.vo.resp.ProfileVo;
 import com.zmy.sys_moudle.lucky.vo.resp.UserVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.bind.BindResult;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +26,8 @@ import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import com.zmy.sys_common.ApiPermission;
 
 /**
@@ -47,7 +51,10 @@ public class UserController extends BaseController {
 
     @PostMapping
     @ApiPermission(name = "api:adduser")
-    public Result addUser(@RequestBody @Valid User user) throws CommonExp {
+    public Result addUser(@RequestBody @Valid User user , BindingResult bindingResult) throws CommonExp {
+        if (bindingResult.hasErrors()) {
+            return Result.error(ResultCode.FAIL,Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage());
+        }
         return Result.success(getUserVo(userService.save(user)));
     }
 
@@ -58,12 +65,14 @@ public class UserController extends BaseController {
     }
 
     @PutMapping
+    @ApiPermission(name = "api:updateuser")
     public Result updateUser(@RequestBody User user) throws CommonExp {
         User dbuser = userService.update(user);
         return Result.success(getUserVo(dbuser));
     }
 
     @DeleteMapping
+    @ApiPermission(name = "api:deleteuser")
     public Result deleteUser(@RequestParam String userId) throws CommonExp {
         userService.deleteUser(userId);
         return Result.success();
@@ -74,6 +83,7 @@ public class UserController extends BaseController {
      * 分配角色
      */
     @PostMapping("/assign_role")
+    @ApiPermission(name = "api:assignRoles")
     public Result assignRoles(@RequestBody Map<String, Object> map) throws CommonExp {
         //1.获取被分配的用户id
         String userId = (String) map.get("id");
