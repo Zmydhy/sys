@@ -1,5 +1,6 @@
 package com.zmy.sys_lucky.service;
 
+import com.zmy.sys_common.config.Constant;
 import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.IdWorker;
@@ -48,7 +49,7 @@ public class UserService {
         User dbUser = userDao.findUserByUsernameEquals(user.getUsername());
         if (dbUser == null) {
             String salt = PasswordUtils.getSalt();
-            String password = PasswordUtils.encode(user.getPassword(),salt);
+            String password = PasswordUtils.encode(user.getPassword(), salt);
             //设置主键的值
             String id = IdWorker.getInstance().nextId();
             user.setId(id);
@@ -86,6 +87,7 @@ public class UserService {
             throw new CommonExp(ResultCode.USERNOEXIST);
         }
     }
+
     public User findById(String id) throws CommonExp {
         User dbuser = userDao.findUserByIdEquals(id);
         if (dbuser != null) {
@@ -133,7 +135,7 @@ public class UserService {
         //1.根据id查询用户
         User user = userDao.findById(userId).get();
         //首先清除用户角色关联
-        userRoleRelationDao.deleteAllByUserIdEquals(user.getId());
+//        userRoleRelationDao.deleteAllByUserIdEquals(user.getId());
         //2.设置用户的角色集合,重新关联
         Set<RoleVo> roles = new HashSet<>();
         for (String roleId : roleIds) {
@@ -149,23 +151,28 @@ public class UserService {
     }
 
     private void createUR_Realation(String userId, String roleId) {
-        UserRoleRelation userRoleRelation = new UserRoleRelation();
-        userRoleRelation.setId(IdWorker.getInstance().nextId());
-        userRoleRelation.setRoleId(roleId);
-        userRoleRelation.setUserId(userId);
-        userRoleRelation.setCreateTime(new Date());
-        userRoleRelation.setUpdateTime(new Date());
-        //加入表
-        userRoleRelationDao.save(userRoleRelation);
+        UserRoleRelation userRoleRelation1 = userRoleRelationDao.findUserRoleRelationByUserIdEqualsAndRoleIdEquals(userId, roleId);
+        if (userRoleRelation1 == null) {
+            UserRoleRelation userRoleRelation = new UserRoleRelation();
+            userRoleRelation.setId(IdWorker.getInstance().nextId());
+            userRoleRelation.setRoleId(roleId);
+            userRoleRelation.setUserId(userId);
+            userRoleRelation.setCreateTime(new Date());
+            userRoleRelation.setUpdateTime(new Date());
+            //加入表
+            userRoleRelationDao.save(userRoleRelation);
+        }
+
     }
+
     public List<UserVo> findUserListByDepartment(String department) throws CommonExp {
         List<User> list = userDao.findAllByDepartmentEquals(department);
         List<UserVo> voList = new ArrayList<>();
-        for (int i = 0; i <list.size() ; i++) {
-            UserVo userVo =findUserVoById(list.get(i).getId());
+        for (int i = 0; i < list.size(); i++) {
+            UserVo userVo = findUserVoById(list.get(i).getId());
             voList.add(userVo);
         }
-        return  voList;
+        return voList;
     }
 
     public User findByUserName(String username) {
