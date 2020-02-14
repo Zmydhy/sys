@@ -4,7 +4,9 @@ import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.IdWorker;
 import com.zmy.sys_common.utils.encdec.PasswordUtils;
+import com.zmy.sys_lucky.dao.DepartmentUserRelationDao;
 import com.zmy.sys_lucky.dao.UserRoleRelationDao;
+import com.zmy.sys_moudle.lucky.entity.DepartmentUserRelation;
 import com.zmy.sys_moudle.lucky.entity.Role;
 import com.zmy.sys_moudle.lucky.entity.User;
 import com.zmy.sys_lucky.dao.RoleDao;
@@ -28,6 +30,7 @@ import java.util.*;
  * Description:
  */
 @Service
+@Transactional
 public class UserService {
     @Autowired
     UserDao userDao;
@@ -35,6 +38,8 @@ public class UserService {
     RoleService roleService;
     @Autowired
     UserRoleRelationDao userRoleRelationDao;
+    @Autowired
+    DepartmentUserRelationDao departmentUserRelationDao;
 
     /**
      * 1.保存用户
@@ -115,6 +120,9 @@ public class UserService {
         User dbuser = userDao.findUserByIdEquals(id);
         if (dbuser != null) {
             userDao.delete(dbuser);
+            //删除用户的时候同时删除用户和角色关联表
+            userRoleRelationDao.deleteAllByUserIdEquals(id);
+            departmentUserRelationDao.deleteAllByUserIdEquals(dbuser.getId());
         } else {
             throw new CommonExp(ResultCode.USERNOEXIST);
         }
@@ -149,6 +157,15 @@ public class UserService {
         userRoleRelation.setUpdateTime(new Date());
         //加入表
         userRoleRelationDao.save(userRoleRelation);
+    }
+    public List<UserVo> findUserListByDepartment(String department) throws CommonExp {
+        List<User> list = userDao.findAllByDepartmentEquals(department);
+        List<UserVo> voList = new ArrayList<>();
+        for (int i = 0; i <list.size() ; i++) {
+            UserVo userVo =findUserVoById(list.get(i).getId());
+            voList.add(userVo);
+        }
+        return  voList;
     }
 
     public User findByUserName(String username) {

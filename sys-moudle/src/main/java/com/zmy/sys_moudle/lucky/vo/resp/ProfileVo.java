@@ -15,7 +15,7 @@ import java.util.*;
 @Setter
 @Getter
 public class ProfileVo {
-
+    private String id;
     private String username;
     private String department;
     private Set<String> roles = new HashSet<>();
@@ -26,7 +26,7 @@ public class ProfileVo {
      * @param user
      */
     public ProfileVo(User user, List<Permission> list) {
-
+        this.id = user.getId();
         this.username = user.getUsername();
         this.department = user.getDepartment();
 
@@ -51,6 +51,7 @@ public class ProfileVo {
 
 
     public ProfileVo(UserVo user) {
+        this.id = user.getId();
         this.username = user.getUsername();
         this.department = user.getDepartment();
 

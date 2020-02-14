@@ -1,5 +1,6 @@
 package com.zmy.sys_lucky.controller;
 
+import com.zmy.sys_common.ApiPermission;
 import com.zmy.sys_common.entity.Result;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_lucky.service.DepartmentService;
@@ -26,6 +27,7 @@ public class DepartMentController {
     DepartmentService departmentService;
 
     @PostMapping
+    @ApiPermission(name = "api:adddepartment")
     public Result addDepartment(@RequestBody Department department) throws CommonExp {
         return Result.success(getDepartmentVo(departmentService.save(department)));
     }
@@ -34,14 +36,20 @@ public class DepartMentController {
     public Result queryDepartment(@RequestParam String departmentId) throws CommonExp {
         return Result.success(getDepartmentVo(departmentService.findById(departmentId)));
     }
+    @GetMapping("/list")
+    public Result queryDepartmentList() throws CommonExp {
+        return Result.success((departmentService.getList()));
+    }
 
     @PutMapping
+    @ApiPermission(name = "api:updatedepartment")
     public Result updateDepartment(@RequestBody Department department) throws CommonExp {
         Department dbdepartment = departmentService.update(department);
         return Result.success(getDepartmentVo(dbdepartment));
     }
 
     @DeleteMapping
+    @ApiPermission(name = "api:deletedepartment")
     public Result deleteDepartment(@RequestParam String departmentId) throws CommonExp {
         departmentService.deleteDepartment(departmentId);
         return Result.success();

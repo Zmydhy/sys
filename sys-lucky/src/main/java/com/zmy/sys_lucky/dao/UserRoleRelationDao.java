@@ -16,5 +16,6 @@ import java.util.List;
 @Repository
 public interface UserRoleRelationDao extends JpaRepository<UserRoleRelation, String> {
     void  deleteAllByUserIdEquals(String userId);
+    void  deleteAllByRoleIdEquals(String roleId);
     List<UserRoleRelation> findAllByUserIdEquals(String userId);
 }

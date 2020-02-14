@@ -4,6 +4,8 @@ import com.zmy.sys_moudle.lucky.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: zmy
@@ -15,4 +17,5 @@ import org.springframework.stereotype.Repository;
 public interface PermissionDao extends JpaRepository<Permission, String> {
     Permission findPermissionByIdEquals(String id);
     Permission findPermissionByNameEqualsAndDepartmentEquals(String name,String department);
+    List<Permission> findAllByDepartmentEquals(String department);
 }

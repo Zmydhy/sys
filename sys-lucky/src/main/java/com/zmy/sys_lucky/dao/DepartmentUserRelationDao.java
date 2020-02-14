@@ -13,4 +13,5 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface DepartmentUserRelationDao extends JpaRepository<DepartmentUserRelation, String> {
+    void  deleteAllByUserIdEquals(String userId);
 }

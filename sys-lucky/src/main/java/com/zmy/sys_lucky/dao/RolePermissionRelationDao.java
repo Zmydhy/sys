@@ -16,5 +16,6 @@ import java.util.List;
 @Repository
 public interface RolePermissionRelationDao extends JpaRepository<RolePermissionRelation, String> {
     void deleteAllByRoleIdEquals(String roleId);
+    void deleteAllByPermissionIdEquals(String permissionId);
     List<RolePermissionRelation> findAllByRoleIdEquals(String roleId);
 }

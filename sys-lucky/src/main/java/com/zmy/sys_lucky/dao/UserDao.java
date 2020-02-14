@@ -1,8 +1,11 @@
 package com.zmy.sys_lucky.dao;
 
 import com.zmy.sys_moudle.lucky.entity.User;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,4 +18,6 @@ import org.springframework.stereotype.Repository;
 public interface UserDao extends JpaRepository<User, String> {
     User findUserByIdEquals(String id);
     User findUserByUsernameEquals(String username);
+    List<User> findAllByDepartmentEquals(String department);
+
 }

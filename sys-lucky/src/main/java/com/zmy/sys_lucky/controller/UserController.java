@@ -58,10 +58,16 @@ public class UserController extends BaseController {
         return Result.success(getUserVo(userService.save(user)));
     }
 
+
+
     @GetMapping
     @ApiPermission(name = "api:queryuser")
     public Result queryUser(@RequestParam String userId) throws CommonExp {
         return Result.success(userService.findUserVoById(userId));
+    }
+    @GetMapping("/list")
+    public Result queryUserList(@RequestParam String depart) throws CommonExp {
+        return Result.success(userService.findUserListByDepartment(depart));
     }
 
     @PutMapping
@@ -83,7 +89,7 @@ public class UserController extends BaseController {
      * 分配角色
      */
     @PostMapping("/assign_role")
-    @ApiPermission(name = "api:assignRoles")
+    @ApiPermission(name = "api:assignrole")
     public Result assignRoles(@RequestBody Map<String, Object> map) throws CommonExp {
         //1.获取被分配的用户id
         String userId = (String) map.get("id");
@@ -123,13 +129,21 @@ public class UserController extends BaseController {
             //api权限字符串
             StringBuilder sb = new StringBuilder();
             //获取到所有的可访问API权限
-            for (Role role : userService.getRoles(user.getId())) {
-                for (Permission perm : roleService.getPermissions(role.getId())) {
-                    if (perm.getType() == PermissionConstants.PERMISSION_API) {
-                        sb.append(perm.getCode()).append(",");
+            List<Role> roleList = userService.getRoles(user.getId());
+            sb.append("PERMISSIONS;");
+            if (roleList != null && roleList.size()>0){
+                for (Role role : roleList) {
+                    List<Permission> permissionList = roleService.getPermissions(role.getId());
+                    if (permissionList != null && permissionList.size()>0){
+                        for (Permission perm : permissionList) {
+                            if (perm.getType() == PermissionConstants.PERMISSION_API) {
+                                sb.append(perm.getCode()).append(",");
+                            }
+                        }
                     }
                 }
             }
+
             Map<String, Object> map = new HashMap<>();
             map.put("apis", sb.toString());//可访问的api权限字符串
             map.put("department", user.getDepartment());

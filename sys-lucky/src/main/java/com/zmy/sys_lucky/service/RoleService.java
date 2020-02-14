@@ -25,11 +25,14 @@ import java.util.*;
  * Description:
  */
 @Service
+@Transactional
 public class RoleService {
 
 
     @Autowired
     RoleDao roleDao;
+    @Autowired
+    PermissionService permissionService;
     @Autowired
     PermissionDao permissionDao;
     @Autowired
@@ -40,14 +43,18 @@ public class RoleService {
     PermissionMenuDao permissionMenuDao;
     @Autowired
     RolePermissionRelationDao rolePermissionRelationDao;
+    @Autowired
+    UserRoleRelationDao userRoleRelationDao;
+
+    private String[] permissions = {"添加用户api", "删除用户api", "添加权限api", "删除权限api", "添加角色api", "删除角色api", "修改用户api", "修改权限api", "修改角色api", "分配角色api", "分配权限api"};
 
 
     /**
      * 1.保存用户
      */
     public Role save(Role role) throws CommonExp {
-        Role dbRole = roleDao.findRoleByNameEqualsAndDepartmentEquals(role.getName(),role.getDepartment());
-        if (dbRole ==null){
+        Role dbRole = roleDao.findRoleByNameEqualsAndDepartmentEquals(role.getName(), role.getDepartment());
+        if (dbRole == null) {
             //设置主键的值
             String id = IdWorker.getInstance().nextId();
             role.setId(id);
@@ -56,10 +63,33 @@ public class RoleService {
             //调用dao保存部门
             roleDao.save(role);
             return role;
-        }else {
+        } else {
             throw new CommonExp(ResultCode.ROLEALEADYEXIST);
         }
 
+    }
+
+    /**
+     * 赋予角色管理员权限
+     */
+    public void assignPermissions(String id) throws CommonExp {
+        Role role = roleDao.findRoleByIdEquals(id);
+        if (role != null) {
+            List<String> lists = new ArrayList<>();
+            //TODO
+            try {
+                for (int i = 0; i < permissions.length; i++) {
+                    Permission permission = permissionService.findByName(permissions[i], "lucky");
+                    if (permission != null) {
+                        lists.add(permission.getId());
+                    }
+                }
+            } catch (CommonExp commonExp) {
+                commonExp.printStackTrace();
+            }
+            assignPermission(role.getId(), lists);
+
+        }
     }
 
     /**
@@ -68,13 +98,13 @@ public class RoleService {
     public Role update(Role role) throws CommonExp {
         Role dbrole = roleDao.findRoleByIdEquals(role.getId());
         if (dbrole != null) {
-            Optional.ofNullable (role.getDescription ()).ifPresent ((s)->dbrole.setDescription (s));
-            Optional.ofNullable (role.getDepartment ()).ifPresent ((s)->dbrole.setDepartment (s));
+            Optional.ofNullable(role.getDescription()).ifPresent((s) -> dbrole.setDescription(s));
+            Optional.ofNullable(role.getDepartment()).ifPresent((s) -> dbrole.setDepartment(s));
             dbrole.setUpdateTime(new Date());
             //调用dao保存部门
             roleDao.save(dbrole);
             return dbrole;
-        }else {
+        } else {
             throw new CommonExp(ResultCode.ROLENOEXIST);
         }
     }
@@ -86,10 +116,25 @@ public class RoleService {
         Role dbrole = roleDao.findRoleByIdEquals(id);
         if (dbrole != null) {
             return roleDao.findById(id).get();
-        }else {
+        } else {
             throw new CommonExp(ResultCode.ROLENOEXIST);
         }
     }
+
+    public List<RoleVo> getList(String department) throws CommonExp {
+        List<Role> mlist = roleDao.findRolesByDepartmentEquals(department);
+        if (mlist != null && mlist.size() > 0) {
+            List<RoleVo> lists = new ArrayList<>();
+            for (int i = 0; i < mlist.size(); i++) {
+                RoleVo roleVo = findRoleVoById(mlist.get(i).getId());
+                lists.add(roleVo);
+            }
+            return lists;
+        } else {
+            throw new CommonExp(ResultCode.FAIL);
+        }
+    }
+
     /**
      * 3.根据id查询用户
      */
@@ -100,36 +145,42 @@ public class RoleService {
             Set<Permission> roleSet = new HashSet<>(list);
 
             RoleVo roleVo = new RoleVo();
-            BeanUtils.copyProperties(dbrole,roleVo);
-            roleVo.setPermissions(new HashSet<Permission>(list) );
+            BeanUtils.copyProperties(dbrole, roleVo);
+            roleVo.setPermissions(new HashSet<Permission>(list));
             return roleVo;
-        }else {
+        } else {
             throw new CommonExp(ResultCode.ROLENOEXIST);
         }
     }
 
-    public void  deleteRole(String id) throws CommonExp {
+
+    public void deleteRole(String id) throws CommonExp {
         Role dbrole = roleDao.findRoleByIdEquals(id);
         if (dbrole != null) {
-             roleDao.delete(dbrole);
-        }else {
+            roleDao.delete(dbrole);
+            //删除角色的的时候同时删除角色和权限的关联表
+            rolePermissionRelationDao.deleteAllByRoleIdEquals(dbrole.getId());
+            userRoleRelationDao.deleteAllByRoleIdEquals(dbrole.getId());
+
+        } else {
             throw new CommonExp(ResultCode.ROLENOEXIST);
         }
     }
+
     @Transactional
     public RoleVo assignPermission(String rolesId, List<String> permissionIds) throws CommonExp {
         Role role = roleDao.findRoleByIdEquals(rolesId);
-        if (role ==null){
-            throw  new CommonExp(ResultCode.ROLENOEXIST);
-        }else {
+        if (role == null) {
+            throw new CommonExp(ResultCode.ROLENOEXIST);
+        } else {
             //首先清除用户角色关联
             rolePermissionRelationDao.deleteAllByRoleIdEquals(role.getId());
             //2.设置用户的角色集合,重新关联
             Set<Permission> permissions = new HashSet<>();
             for (String permissionId : permissionIds) {
-                Permission  permission = permissionDao.findPermissionByIdEquals(permissionId);
+                Permission permission = permissionDao.findPermissionByIdEquals(permissionId);
                 //创建关联
-                createRP_Realation(role.getId(),permissionId);
+                createRP_Realation(role.getId(), permissionId);
                 permissions.add(permission);
             }
             RoleVo roleVo = new RoleVo();
@@ -163,4 +214,6 @@ public class RoleService {
         }
         return null;
     }
+
+
 }

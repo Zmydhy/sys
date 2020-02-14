@@ -5,10 +5,7 @@ import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.BeanMapUtils;
 import com.zmy.sys_common.utils.IdWorker;
 import com.zmy.sys_common.utils.PermissionConstants;
-import com.zmy.sys_lucky.dao.PermissionApiDao;
-import com.zmy.sys_lucky.dao.PermissionDao;
-import com.zmy.sys_lucky.dao.PermissionMenuDao;
-import com.zmy.sys_lucky.dao.PermissionPointDao;
+import com.zmy.sys_lucky.dao.*;
 import com.zmy.sys_moudle.lucky.entity.Permission;
 import com.zmy.sys_moudle.lucky.entity.PermissionApi;
 import com.zmy.sys_moudle.lucky.entity.PermissionMenu;
@@ -17,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,6 +39,10 @@ public class PermissionService {
 
     @Autowired
     PermissionPointDao permissionPointDao;
+
+
+    @Autowired
+    RolePermissionRelationDao rolePermissionRelationDao;
 
     /**
      * 1.保存用户
@@ -119,14 +121,35 @@ public class PermissionService {
         }
     }
 
-    public void deletePermission(String id) throws CommonExp {
-        Permission dbpermission = permissionDao.findPermissionByIdEquals(id);
+    public Permission findByName(String name,String depart) throws CommonExp {
+        Permission dbpermission = permissionDao.findPermissionByNameEqualsAndDepartmentEquals(name,depart);
         if (dbpermission != null) {
-            permissionDao.delete(dbpermission);
+            return dbpermission;
         } else {
             throw new CommonExp(ResultCode.PERMISSIONNOEXIST);
         }
     }
+
+    public List<Permission> getList(String depart) throws CommonExp{
+        List<Permission> list = permissionDao.findAllByDepartmentEquals(depart);
+        if (list != null && list.size()>0) {
+            return list;
+        } else {
+            throw new CommonExp(ResultCode.FAIL);
+        }
+    }
+
+    public void deletePermission(String id) throws CommonExp {
+        Permission dbpermission = permissionDao.findPermissionByIdEquals(id);
+        if (dbpermission != null) {
+            permissionDao.delete(dbpermission);
+            //同时删除角色和权限的关联
+            rolePermissionRelationDao.deleteAllByPermissionIdEquals(dbpermission.getId());
+        } else {
+            throw new CommonExp(ResultCode.PERMISSIONNOEXIST);
+        }
+    }
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.zmy.sys_lucky.controller;
 
+import com.zmy.sys_common.ApiPermission;
 import com.zmy.sys_common.entity.Result;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_lucky.service.PermissionService;
@@ -26,6 +27,7 @@ public class PermissionController {
     PermissionService permissionService;
 
     @PostMapping
+    @ApiPermission(name = "api:addpermission")
     public Result addPermission(@RequestBody Map<String,Object> map) throws Exception {
         return Result.success(getPermissionVo(permissionService.save(map)));
     }
@@ -35,13 +37,20 @@ public class PermissionController {
         return Result.success(getPermissionVo(permissionService.findById(permissionId)));
     }
 
+    @GetMapping("/list")
+    public Result queryPermissionList(@RequestParam String depart) throws CommonExp {
+        return Result.success((permissionService.getList(depart)));
+    }
+
     @PutMapping
+    @ApiPermission(name = "api:updatepermission")
     public Result updatePermission(@RequestBody Permission permission) throws CommonExp {
         Permission dbpermission = permissionService.update(permission);
         return Result.success(getPermissionVo(dbpermission));
     }
 
     @DeleteMapping
+    @ApiPermission(name = "api:deletepermission")
     public Result deletePermission(@RequestParam String permissionId) throws CommonExp {
         permissionService.deletePermission(permissionId);
         return Result.success();

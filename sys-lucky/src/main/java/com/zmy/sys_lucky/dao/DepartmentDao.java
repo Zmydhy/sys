@@ -15,4 +15,5 @@ import org.springframework.stereotype.Repository;
 public interface DepartmentDao extends JpaRepository<Department, String> {
     Department findDepartmentByNameEquals(String name);
     Department findDepartmentByIdEquals(String id);
+
 }

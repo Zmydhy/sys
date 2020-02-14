@@ -4,18 +4,19 @@ import com.zmy.jar_test.log.Log;
 import com.zmy.sys_common.entity.ResultCode;
 import com.zmy.sys_common.exception.CommonExp;
 import com.zmy.sys_common.utils.IdWorker;
+import com.zmy.sys_common.utils.encdec.PasswordUtils;
 import com.zmy.sys_lucky.dao.DepartmentDao;
 import com.zmy.sys_lucky.dao.DepartmentUserRelationDao;
 import com.zmy.sys_lucky.dao.RoleDao;
 import com.zmy.sys_lucky.dao.UserDao;
-import com.zmy.sys_moudle.lucky.entity.Department;
-import com.zmy.sys_moudle.lucky.entity.DepartmentUserRelation;
-import com.zmy.sys_moudle.lucky.entity.User;
+import com.zmy.sys_moudle.lucky.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -35,8 +36,21 @@ public class DepartmentService {
     UserDao userDao;
 
     @Autowired
+    UserService userService;
+
+    @Autowired
+    RoleService roleService;
+
+    @Autowired
+    PermissionService permissionService;
+
+    @Autowired
+    RoleDao roleDao;
+
+    @Autowired
     DepartmentUserRelationDao departmentUserRelationDao;
 
+    private String[] permissions = {"添加用户api", "删除用户api", "添加权限api", "删除权限api", "添加角色api", "删除角色api", "修改用户api", "修改权限api", "修改角色api", "分配角色api", "分配权限api"};
 
     /**
      * 1.保存用户
@@ -54,7 +68,7 @@ public class DepartmentService {
             User admin = checkManager(department);
             department.setManager(admin.getUsername());
             //添加用户名和项目间关系
-            addRelation(department,admin);
+            addRelation(department, admin);
             //调用dao保存部门
             departmentDao.save(department);
             return department;
@@ -64,6 +78,12 @@ public class DepartmentService {
 
     }
 
+    /**
+     * 添加部门与用户之间的关系
+     *
+     * @param department
+     * @param admin
+     */
     private void addRelation(Department department, User admin) {
         DepartmentUserRelation departmentUserRelation = new DepartmentUserRelation();
         departmentUserRelation.setId(IdWorker.getInstance().nextId());
@@ -85,22 +105,93 @@ public class DepartmentService {
         User dbuser = userDao.findUserByUsernameEquals(user.getUsername());
         if (dbuser == null) {
             userDao.save(user);
+            Role role = createRole(user);
+            roleDao.save(role);
+            assignRole(user, role);
+            roleService.assignPermissions(role.getId());
             return user;
         } else {
-          return  dbuser;
+            dbuser.setDepartment(user.getDepartment());
+            dbuser.setUpdateTime(new Date());
+            userDao.save(dbuser);
+
+            Role role = createRole(user);
+            roleDao.save(role);
+            assignRole(user, role);
+            roleService.assignPermissions(role.getId());
+            return dbuser;
         }
     }
 
+    /**
+     * 赋予项目管理员权限
+     *
+     * @param role
+     */
+//    public void assignPermissions(Role role) {
+//        List<String> lists = new ArrayList<>();
+//        //TODO
+//        try {
+//            for (int i = 0; i < permissions.length; i++) {
+//                Permission permission = permissionService.findByName(permissions[i], "lucky");
+//                if (permission != null){
+//                    lists.add(permission.getId());
+//                }
+//            }
+//        } catch (CommonExp commonExp) {
+//            commonExp.printStackTrace();
+//        }
+//        try {
+//            roleService.assignPermission(role.getId(),lists);
+//        } catch (CommonExp commonExp) {
+//            commonExp.printStackTrace();
+//        }
+//
+//    }
+
+
+    /**
+     * 赋予管理员角色
+     */
+    public void assignRole(User user, Role role) throws CommonExp {
+        List<String> lists = new ArrayList<>();
+        lists.add(role.getId());
+        userService.assignRoles(user.getId(), lists);
+    }
+
+    /**
+     * 创建项目管理员角色
+     */
+    public Role createRole(User user) {
+        Role role = new Role();
+        role.setId(IdWorker.getInstance().nextId());
+        role.setName("msadmin");
+        role.setDepartment(user.getDepartment());
+        role.setDescription(user.getDepartment() + "项目管理员");
+        role.setUpdateTime(new Date());
+        role.setCreateTime(new Date());
+        return role;
+    }
+
+    /**
+     * 创建项目管理员
+     *
+     * @param manager
+     * @return
+     */
     private User createUser(Department manager) {
         User admin = new User();
         admin.setId(IdWorker.getInstance().nextId());
-        admin.setState("1");
         if (manager.getManager() == null) {
             admin.setUsername(manager.getName() + "_admin");
         } else {
             admin.setUsername(manager.getManager());
         }
-        admin.setPassword("666666");
+        String salt = PasswordUtils.getSalt();
+        admin.setSalt(salt);
+        String password = PasswordUtils.encode("666666", salt);
+        admin.setPassword(password);
+        admin.setState("1");
         admin.setDepartment(manager.getName());
         admin.setUpdateTime(new Date());
         admin.setCreateTime(new Date());
@@ -120,7 +211,7 @@ public class DepartmentService {
                     User user = userDao.findUserByUsernameEquals(department.getManager());
                     if (user != null) {
                         dbdepartment.setManager(s);
-                    }else {
+                    } else {
                         try {
                             throw new CommonExp(ResultCode.DEPARTMENTNOEXIST);
                         } catch (CommonExp commonExp) {
@@ -150,6 +241,16 @@ public class DepartmentService {
             throw new CommonExp(ResultCode.DEPARTMENTNOEXIST);
         }
     }
+
+    public List<Department> getList() throws CommonExp {
+        List<Department> dbdepartments = departmentDao.findAll();
+        if (dbdepartments != null) {
+            return dbdepartments;
+        } else {
+            throw new CommonExp(ResultCode.FAIL);
+        }
+    }
+
     @Transactional
     public void deleteDepartment(String id) throws CommonExp {
         Department dbdepartment = departmentDao.findDepartmentByIdEquals(id);
