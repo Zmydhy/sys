@@ -76,7 +76,6 @@ public class RoleService {
         Role role = roleDao.findRoleByIdEquals(id);
         if (role != null) {
             List<String> lists = new ArrayList<>();
-            //TODO
             try {
                 for (int i = 0; i < permissions.length; i++) {
                     Permission permission = permissionService.findByName(permissions[i], "lucky");
@@ -88,7 +87,6 @@ public class RoleService {
                 commonExp.printStackTrace();
             }
             assignPermission(role.getId(), lists);
-
         }
     }
 
@@ -174,7 +172,7 @@ public class RoleService {
             throw new CommonExp(ResultCode.ROLENOEXIST);
         } else {
             //首先清除用户角色关联
-            rolePermissionRelationDao.deleteAllByRoleIdEquals(role.getId());
+//            rolePermissionRelationDao.deleteAllByRoleIdEquals(role.getId());
             //2.设置用户的角色集合,重新关联
             Set<Permission> permissions = new HashSet<>();
             for (String permissionId : permissionIds) {
@@ -191,13 +189,17 @@ public class RoleService {
     }
 
     private void createRP_Realation(String id, String permissionId) {
-        RolePermissionRelation rolePermissionRelation = new RolePermissionRelation();
-        rolePermissionRelation.setId(IdWorker.getInstance().nextId());
-        rolePermissionRelation.setCreateTime(new Date());
-        rolePermissionRelation.setUpdateTime(new Date());
-        rolePermissionRelation.setPermissionId(permissionId);
-        rolePermissionRelation.setRoleId(id);
-        rolePermissionRelationDao.save(rolePermissionRelation);
+        RolePermissionRelation rolePermissionRelation1 = rolePermissionRelationDao.findRolePermissionRelationByRoleIdEqualsAndPermissionIdEquals(id,permissionId);
+        if (rolePermissionRelation1 == null){
+            RolePermissionRelation rolePermissionRelation = new RolePermissionRelation();
+            rolePermissionRelation.setId(IdWorker.getInstance().nextId());
+            rolePermissionRelation.setCreateTime(new Date());
+            rolePermissionRelation.setUpdateTime(new Date());
+            rolePermissionRelation.setPermissionId(permissionId);
+            rolePermissionRelation.setRoleId(id);
+            rolePermissionRelationDao.save(rolePermissionRelation);
+        }
+
     }
 
 
