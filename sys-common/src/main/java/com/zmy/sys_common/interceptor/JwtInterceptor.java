@@ -79,12 +79,14 @@ public class JwtInterceptor extends HandlerInterceptorAdapter {
                         request.setAttribute("user_claims", claims);
                         return true;
                     } else {
-                        throw new CommonExp(ResultCode.UNAUTHORISE);
+                        return  true;
+//                        throw new CommonExp(ResultCode.UNAUTHORISE);
                     }
                 }
 
             }
         }
-        throw new CommonExp(ResultCode.UNAUTHORISE);
+        return true;
+//        throw new CommonExp(ResultCode.UNAUTHORISE);
     }
 }

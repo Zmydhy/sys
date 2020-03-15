@@ -128,7 +128,7 @@ public class DepartmentService {
      *
      * @param role
      */
-//    public void assignPermissions(Role role) {
+//    public void assignPermissions(Roles role) {
 //        List<String> lists = new ArrayList<>();
 //        //TODO
 //        try {
