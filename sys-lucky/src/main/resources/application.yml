@@ -2,6 +2,7 @@ server:
   port: 12999
 spring:
   main:
+    #表示后发现的bean会覆盖之前相同名称的bean
     allow-bean-definition-overriding: true
   datasource:
     url: jdbc:mysql://192.168.0.123:3306/ums?characterEncoding=utf-8&useSSL=false
